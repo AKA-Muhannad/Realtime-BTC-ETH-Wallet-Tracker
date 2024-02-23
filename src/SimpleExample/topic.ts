@@ -24,7 +24,8 @@ async function run() {
         console.log('Topic has been created successflly 👍')
         await admin.disconnect()
     } catch (error) {
-        console.log(`Something went wrong!! ❌ ${error}`)
+        console.log(`Something went wrong!! ❌`)
+        console.log(error)
     } finally {
         process.exit(0)
     }
