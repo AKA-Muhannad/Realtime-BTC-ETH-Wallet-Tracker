@@ -1,8 +1,9 @@
 import { Kafka, logLevel } from "kafkajs";
 import dotenv from 'dotenv';
 import { faker } from '@faker-js/faker';
+import * as path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve('../.env') });
 
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER! // the address it cannot be null!
 
