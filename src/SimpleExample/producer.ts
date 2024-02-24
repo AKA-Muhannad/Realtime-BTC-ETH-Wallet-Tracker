@@ -10,21 +10,21 @@ async function run() {
             brokers: [process.env.KAFKA_BROKER!]
         })
         // admin interface to create a topic
-        const admin = kafka.admin()
+        const producer = kafka.producer()
         console.log('Connecting... 🤌')
-        await admin.connect()
+        await producer.connect()
         console.log('Connected! ✅')
 
-        // it's A-M , N-Z
-        await admin.createTopics({
-            waitForLeaders: true,
-            topics: [{
-                topic: 'Users',
-                numPartitions: 2,
-            }]
-        })
-        console.log('Topic has been created successflly 👍')
-        await admin.disconnect()
+        for( let i =0 ; i < 1_000_000 ; i++) {
+            await producer.send({
+                topic: "Users",
+                messages: [{
+                    value: `Testing ...${i}`,
+                }]
+            });
+        }
+        console.log('Message has been created successflly 👍')
+        await producer.disconnect()
     } catch (error) {
         console.log(`Something went wrong!! ❌`)
         console.log(error)
