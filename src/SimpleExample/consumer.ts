@@ -1,13 +1,18 @@
 import { Kafka } from "kafkajs";
 import dotenv from 'dotenv';
+import * as path from 'path';
 
-dotenv.config();
 
-async function run() {
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
+
+
+async function runConsumer() {
     try {
         const kafka = new Kafka({
             clientId: 'myapp',
-            brokers: [process.env.KAFKA_BROKER!]
+            brokers: [KAFKA_BROKER_ADDRESS]
         })
         // admin interface to create a topic
         const consumer = kafka.consumer({
@@ -28,7 +33,7 @@ async function run() {
             }
         })
 
-        
+
         // console.log('Topic has been created successflly 👍')
         // await consumer.disconnect()
     } catch (error) {
@@ -40,4 +45,4 @@ async function run() {
     }
 }
 
-run()
+runConsumer()
