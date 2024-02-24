@@ -1,13 +1,16 @@
 import { Kafka } from "kafkajs";
 import dotenv from 'dotenv';
+import * as path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-async function run() {
+const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
+
+async function runProducer() {
     try {
         const kafka = new Kafka({
             clientId: 'myapp',
-            brokers: [process.env.KAFKA_BROKER!]
+            brokers: [KAFKA_BROKER_ADDRESS]
         })
         // admin interface to create a topic
         const producer = kafka.producer()
@@ -15,7 +18,7 @@ async function run() {
         await producer.connect()
         console.log('Connected! ✅')
 
-        for( let i =0 ; i < 1_000_000 ; i++) {
+        for (let i = 0; i < 1_000_000; i++) {
             await producer.send({
                 topic: "Users",
                 messages: [{
@@ -34,4 +37,4 @@ async function run() {
     }
 }
 
-run()
+runProducer()
