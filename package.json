@@ -13,6 +13,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@types/node": "^20.11.19",
+    "@types/uuid": "^9.0.8",
     "@types/ws": "^8.5.10",
     "typescript": "^5.3.3"
   },
@@ -22,6 +23,7 @@
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
     "kafkajs": "^2.2.4",
+    "uuid": "^9.0.1",
     "websocket": "^1.0.34",
     "ws": "^8.16.0"
   },
