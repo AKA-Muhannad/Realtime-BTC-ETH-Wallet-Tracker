@@ -23,34 +23,43 @@ async function shutdown() {
     process.exit(0)
 }
 
+function runCLI() {
+    try {
+        ws.on('open', () => {
+            sendSocketMessage(ws, WebSocketEvents.SetupWallet, address)
 
-ws.on('open', () => {
-    sendSocketMessage(ws, WebSocketEvents.SetupWallet, address)
+            // the user can update the wallet balance by press Enter key
+            setupKeyListener({
+                onEnter: () => sendSocketMessage(ws, WebSocketEvents.ReadBalance),
+                onClose: () => shutdown(),
+            })
+            loadWalletBalanceLoop(ws, 60)
+        })
 
-    // the user can update the wallet balance by press Enter key
-    setupKeyListener({
-        onEnter: () => sendSocketMessage(ws, WebSocketEvents.ReadBalance),
-        onClose: () => shutdown(),
-    })
-})
+        ws.on('message', (json: string) => {
+            const { data, type } = JSON.parse(json)
 
-ws.on('message', (json: string) => {
-    const { data, type } = JSON.parse(json)
-
-    switch (type) {
-        case WebSocketEvents.BalanceUpdated:
-            {
-                balance = data.balance
-                printBalance(currency, price, balance)
-                break
+            switch (type) {
+                case WebSocketEvents.BalanceUpdated:
+                    {
+                        balance = data.balance
+                        printBalance(currency, price, balance)
+                        break
+                    }
+                case WebSocketEvents.PriceUpdated:
+                    {
+                        price = data.price
+                        printBalance(currency, price, balance)
+                        break
+                    }
             }
-        case WebSocketEvents.PriceUpdated:
-            {
-                price = data.price
-                printBalance(currency, price, balance)
-                break
-            }
+        })
+
+        ws.on('close', () => shutdown())
+    } catch (error) {
+        console.log('something went wrong ❌')
+        console.log(error)
     }
-})
+}
 
-ws.on('close', () => shutdown())
+runCLI()

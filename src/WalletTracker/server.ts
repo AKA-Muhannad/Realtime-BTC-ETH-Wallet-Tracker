@@ -3,7 +3,10 @@ import { WebSocketServer, WebSocket } from 'ws'
 import { Kafka, logLevel } from 'kafkajs'
 import { getCurrencyFromAddress, sendSocketMessage } from './utils'
 import { KafkaTopics, WebSocketEvents } from './events'
+import dotenv from 'dotenv';
+import * as path from 'path';
 
+dotenv.config({ path: path.resolve('../../.env') });
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
 
 const kafka = new Kafka({ brokers: [KAFKA_BROKER_ADDRESS], logLevel: logLevel.ERROR })
@@ -21,6 +24,7 @@ const clientWallets = new Map<string, { address: string, currency: string }>() /
 const walletBalances = new Map<string, number>() // address -> balance
 const prices: Record<string, number | null> = { btc: null, eth: null } // currncy -> price
 
+
 function notifyClientsAboutPriceUpdate(currency: string, price: number) {
     clients.forEach((ws, id) => {
         const wallet = clientWallets.get(id)
@@ -37,7 +41,6 @@ function notifyClientsAboutBalanceUpdate(address: string, balance: number) {
     })
 }
 
-
 async function pleaseCrawlBalance(address: string, currency: string) {
     const payload = JSON.stringify({ address, currency })
     await producer.send({
@@ -47,59 +50,64 @@ async function pleaseCrawlBalance(address: string, currency: string) {
 }
 
 async function runServer() {
-    await priceConsumer.connect()
-    await balanceConsumer.connect()
-    await producer.connect()
+    try {
+        await priceConsumer.connect()
+        await balanceConsumer.connect()
+        await producer.connect()
 
-    await priceConsumer.subscribe({ topic: KafkaTopics.CurrencyPrice, fromBeginning: false })
-    await balanceConsumer.subscribe({ topic: KafkaTopics.WalletBalance, fromBeginning: false })
+        await priceConsumer.subscribe({ topic: KafkaTopics.CurrencyPrice, fromBeginning: false })
+        await balanceConsumer.subscribe({ topic: KafkaTopics.WalletBalance, fromBeginning: false })
 
-    await priceConsumer.run({
-        eachMessage: async ({ message }) => {
-            const { price } = JSON.parse(message.value!.toString())
-            const currency = message.key!.toString()
-            price[currency] = price
-            notifyClientsAboutPriceUpdate(currency, price)
-        }
-    })
-
-    await balanceConsumer.run({
-        eachMessage: async ({ message }) => {
-            const { balance } = JSON.parse(message.value!.toString())
-            const address = message.key!.toString()
-            walletBalances.set(address, balance)
-            notifyClientsAboutBalanceUpdate(address, balance)
-        }
-    })
-
-    wss.on('connection', (ws) => {
-        const socketId = uuidv4()
-        clients.set(socketId, ws)
-
-        ws.on('message', async (payload: string) => {
-            const { type, data } = JSON.parse(payload)
-
-            switch (type) {
-                case WebSocketEvents.SetupWallet:
-                    {
-                        const address = data
-                        const currency = getCurrencyFromAddress(address)
-                        clientWallets.set(socketId, { address, currency })
-
-                        const price = prices[currency]
-                        if (price) notifyClientsAboutPriceUpdate(currency, price)
-
-                        const balance = walletBalances.get(address)
-                        if (balance) notifyClientsAboutBalanceUpdate(address, balance)
-                        else await pleaseCrawlBalance(address, currency)
-
-                        break
-                    }
+        await priceConsumer.run({
+            eachMessage: async ({ message }) => {
+                const { price } = JSON.parse(message.value!.toString())
+                const currency = message.key!.toString()
+                price[currency] = price
+                notifyClientsAboutPriceUpdate(currency, price)
             }
         })
-    })
+
+        await balanceConsumer.run({
+            eachMessage: async ({ message }) => {
+                const { balance } = JSON.parse(message.value!.toString())
+                const address = message.key!.toString()
+                walletBalances.set(address, balance)
+                notifyClientsAboutBalanceUpdate(address, balance)
+            }
+        })
+
+        wss.on('connection', (ws) => {
+            const socketId = uuidv4()
+            clients.set(socketId, ws)
+
+            ws.on('message', async (payload: string) => {
+                const { type, data } = JSON.parse(payload)
+
+                switch (type) {
+                    case WebSocketEvents.SetupWallet:
+                        {
+                            const address = data
+                            const currency = getCurrencyFromAddress(address)
+                            clientWallets.set(socketId, { address, currency })
+
+                            const price = prices[currency]
+                            if (price) notifyClientsAboutPriceUpdate(currency, price)
+
+                            const balance = walletBalances.get(address)
+                            if (balance) notifyClientsAboutBalanceUpdate(address, balance)
+                            else await pleaseCrawlBalance(address, currency)
+
+                            break
+                        }
+                }
+            })
+        })
 
 
+    } catch (error) {
+        console.log('something went wrong ❌')
+        console.log(error)
+    }
 }
 
 runServer()
