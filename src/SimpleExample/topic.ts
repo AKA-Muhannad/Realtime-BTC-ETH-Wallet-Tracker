@@ -1,12 +1,17 @@
 import { Kafka } from "kafkajs";
 import dotenv from 'dotenv';
+import * as path from 'path';
 
 
-async function run() {
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
+
+async function runTopic() {
     try {
         const kafka = new Kafka({
             clientId: 'myapp',
-            brokers: [process.env.KAFKA_BROKER!]
+            brokers: [KAFKA_BROKER_ADDRESS]
         })
         // admin interface to create a topic
         const admin = kafka.admin()
@@ -16,6 +21,7 @@ async function run() {
 
         // it's A-M , N-Z
         await admin.createTopics({
+            waitForLeaders: true,
             topics: [{
                 topic: 'Users',
                 numPartitions: 2,
@@ -24,10 +30,10 @@ async function run() {
         console.log('Topic has been created successflly 👍')
         await admin.disconnect()
     } catch (error) {
-        console.log(`Something went wrong!! ❌ ${error}`)
-    } finally {
-        process.exit(0)
+        console.log(`Something went wrong!! ❌`)
+        console.log(error)
+
     }
 }
 
-run()
+runTopic()

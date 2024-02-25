@@ -1,8 +1,12 @@
+/*
+THIS FILE ONLY FOR TEST THE KAFKA
+*/
 import { Kafka, logLevel } from "kafkajs";
 import dotenv from 'dotenv';
 import { faker } from '@faker-js/faker';
+import * as path from 'path';
 
-dotenv.config();
+dotenv.config({ path: path.resolve('../../.env') });
 
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER! // the address it cannot be null!
 
@@ -36,14 +40,28 @@ async function main() {
             }
         },)
 
-        await producer.send({
-            topic: EXAMPLE_TOPIC,
-            messages: [{
-                key: faker.string.uuid(),
-                value: faker.internet.userName()
-            }]
+        // disconnect the consumer and the producer before stopping the app
+        process.on('SIGTERM', async () => {
+            await consumer.disconnect()
+            await producer.disconnect()
+            process.exit(0)
         })
+        while (true) {
+            await new Promise(async (res) => {
+                await producer.send({
+                    topic: EXAMPLE_TOPIC,
+                    messages: [{
+                        key: faker.string.uuid(),
+                        value: faker.internet.userName()
+                    }]
+                })
+                setTimeout(() => res(null), 3 * Math.random() * 1000)
+            })
+
+        }
+
     } catch (error) {
+        console.log(`Something went wrong!! ❌`)
         console.log(error)
     }
 }
