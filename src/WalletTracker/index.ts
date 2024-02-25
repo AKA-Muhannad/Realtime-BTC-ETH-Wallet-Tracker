@@ -1,3 +1,6 @@
+/*
+THIS FILE ONLY FOR TEST THE KAFKA
+*/
 import { Kafka, logLevel } from "kafkajs";
 import dotenv from 'dotenv';
 import { faker } from '@faker-js/faker';
