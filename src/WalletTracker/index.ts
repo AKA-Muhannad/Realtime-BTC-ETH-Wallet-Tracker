@@ -58,6 +58,7 @@ async function main() {
         }
 
     } catch (error) {
+        console.log(`Something went wrong!! ❌`)
         console.log(error)
     }
 }
