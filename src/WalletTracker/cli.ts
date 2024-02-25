@@ -21,8 +21,8 @@ async function shutdown() {
     Array.apply(null, Array(4)).forEach(() => process.stdout.write('\n'))
     await ws.close()
     process.exit(0)
-  }
-  
+}
+
 
 ws.on('open', () => {
     sendSocketMessage(ws, WebSocketEvents.SetupWallet, address)
@@ -34,17 +34,17 @@ ws.on('open', () => {
     })
 })
 
-ws.on('message', (json:string) => {
-    const {data, type} = JSON.parse(json)
+ws.on('message', (json: string) => {
+    const { data, type } = JSON.parse(json)
 
-    switch(type){
+    switch (type) {
         case WebSocketEvents.BalanceUpdated:
             {
                 balance = data.balance
                 printBalance(currency, price, balance)
                 break
             }
-            case WebSocketEvents.PriceUpdated: 
+        case WebSocketEvents.PriceUpdated:
             {
                 price = data.price
                 printBalance(currency, price, balance)

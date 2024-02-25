@@ -7,12 +7,15 @@ import { json } from 'stream/consumers';
 
 dotenv.config({ path: path.resolve('../../.env') });
 
-const KAFKA_BROKER = process.env.KAFKA_BROKER!
+const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
 
 const BTC_USDT_TICKER = 'btcusdt'
 const ETH_USDT_TICKER = 'ethusdt'
 const client = new Spot()
-const kafka = new Kafka({ brokers: [KAFKA_BROKER], logLevel: logLevel.ERROR })
+const kafka = new Kafka({
+    brokers: [KAFKA_BROKER_ADDRESS],
+    logLevel: logLevel.ERROR
+})
 const producer = kafka.producer()
 
 async function runPrice() {
@@ -25,7 +28,10 @@ async function runPrice() {
 
             await producer.send({
                 topic: KafkaTopics.CurrencyPrice,
-                messages: [{ key: currency, value: payload }]
+                messages: [{
+                    key: currency,
+                    value: payload
+                }]
             })
         }
     }
