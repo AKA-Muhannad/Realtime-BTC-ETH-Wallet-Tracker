@@ -17,7 +17,7 @@ const producer = kafka.producer()
 const groupId = 'balance-crawler'
 const taskConsumer = kafka.consumer({ groupId, retry: { retries: 0 } })
 
-async function getWalletBalance(currency: string, address: string) {
+export async function getWalletBalance(currency: string, address: string) {
     let url = `${BLOCKCYPHER_API_URL}/${currency}/main/addrs/${address}/balance`
     // if the token was exist
     if (BLOCKCYPHER_TOKEN) url += `?token=${BLOCKCYPHER_TOKEN}`
@@ -30,24 +30,27 @@ async function getWalletBalance(currency: string, address: string) {
 
 async function runBalance() {
     try {
-        const admin = kafka.admin()
-        console.log('Connecting... 🤌')
-        await admin.connect()
-        console.log('Connected! ✅')
-        const topics = [];
-        // Loop through enum values and create topics
-        for (const topic of Object.values(KafkaTopics)) {
-            topics.push({
-                topic,
-                numPartitions: 2, // Set the number of partitions as required
-            });
-        }
-        console.log(topics)
-        await admin.createTopics({
-            waitForLeaders: true,
-            topics: topics
-        })
-        console.log('Topic has been created successflly 👍')
+        // const admin = kafka.admin()
+        // console.log('Connecting... 🤌')
+        // await admin.connect()
+        // console.log('Connected! ✅')
+        // const topics = [];
+        // // Loop through enum values and create topics
+        // for (const topic of Object.values(KafkaTopics)) {
+        //     topics.push({
+        //         topic,
+        //         numPartitions: 2, // Set the number of partitions as required
+        //     });
+        // }
+        // console.log(topics)
+        // await admin.createTopics({
+        //     waitForLeaders: true,
+        //     topics: topics
+        // })
+        await taskConsumer.subscribe({topic: KafkaTopics.TaskToReadBalance, fromBeginning: false})
+        //console.log('Topic has been created successflly 👍')
+        console.log('Started successflly 👍')
+        
         await producer.connect()
         await taskConsumer.connect()
         
@@ -58,15 +61,14 @@ async function runBalance() {
                 const balance = await getWalletBalance(currency, address)
                 const payload = JSON.stringify({ balance })
                 // Loop to send all the topics
-                for (const topic of Object.values(KafkaTopics)) {
-                    console.log(topic)
+               
                     await producer.send({
-                        topic: topic,
+                        topic: KafkaTopics.WalletBalance,
                         messages: [
                             { key: address, value: payload }
                         ]
                     })
-                }
+                
             }
 
         })

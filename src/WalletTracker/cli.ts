@@ -12,7 +12,9 @@ const WEB_SOCKET = process.env.WEB_SOCKET!
 const ws = new WebSocket(WEB_SOCKET)
 const address = process.argv[2]
 console.log({address})
+
 const currency = getCurrencyFromAddress(address)
+console.log(currency)
 let balance: number | undefined
 let price: number | undefined
 

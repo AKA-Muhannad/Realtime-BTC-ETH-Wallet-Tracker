@@ -8,7 +8,6 @@ import * as path from 'path';
 
 dotenv.config({ path: path.resolve('../../.env') });
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
-const PORT = Number(process.env.PORT!)
 const WS_PORT = Number(process.env.WS_PORT!)
 
 const kafka = new Kafka({ brokers: [KAFKA_BROKER_ADDRESS], logLevel: logLevel.ERROR })
@@ -104,7 +103,7 @@ async function runServer() {
                 }
             })
         })
-
+        console.log('SERVER IS RUNNING ⚡️')
 
     } catch (error) {
         console.log('something went wrong ❌')
