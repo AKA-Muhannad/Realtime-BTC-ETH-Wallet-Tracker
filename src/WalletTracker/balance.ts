@@ -38,8 +38,6 @@ async function runBalance() {
         console.log('Connecting... 🤌')
         await admin.connect()
         console.log('Connected! ✅')
-        console.log(KafkaTopics.CurrencyPrice)
-
         const topics = [];
         // Loop through enum values and create topics
         for (const topic of Object.values(KafkaTopics)) {
@@ -48,6 +46,7 @@ async function runBalance() {
                 numPartitions: 2, // Set the number of partitions as required
             });
         }
+        console.log(topics)
         await admin.createTopics({
             waitForLeaders: true,
             topics: topics
@@ -61,13 +60,16 @@ async function runBalance() {
                 const { address, currency } = JSON.parse(message.value!.toString())
                 const balance = await getWalletBalance(currency, address)
                 const payload = JSON.stringify({ balance })
-                await producer.send({
-                    topic: KafkaTopics.WalletBalance,
-                    messages: [
-                        { key: address, value: payload }
-                    ]
-                })
+                for (const topic of Object.values(KafkaTopics)) {
+                    await producer.send({
+                        topic: topic,
+                        messages: [
+                            { key: address, value: payload }
+                        ]
+                    })
+                }
             }
+
         })
     } catch (error) {
         console.log('something went wrong ❌')
