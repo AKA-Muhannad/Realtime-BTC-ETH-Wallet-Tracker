@@ -11,10 +11,6 @@ const BLOCKCYPHER_TOKEN = process.env.BLOCKCYPHER_TOKEN
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
 
 
-console.log(BLOCKCYPHER_API_URL)
-console.log(BLOCKCYPHER_TOKEN)
-console.log(KAFKA_BROKER_ADDRESS)
-
 const kafka = new Kafka({ brokers: [KAFKA_BROKER_ADDRESS], logLevel: logLevel.ERROR })
 const producer = kafka.producer()
 
@@ -54,13 +50,16 @@ async function runBalance() {
         console.log('Topic has been created successflly 👍')
         await producer.connect()
         await taskConsumer.connect()
+        
         //when we recevied each task we will load the balance
         await taskConsumer.run({
             eachMessage: async ({ message }) => {
                 const { address, currency } = JSON.parse(message.value!.toString())
                 const balance = await getWalletBalance(currency, address)
                 const payload = JSON.stringify({ balance })
+                // Loop to send all the topics
                 for (const topic of Object.values(KafkaTopics)) {
+                    console.log(topic)
                     await producer.send({
                         topic: topic,
                         messages: [
