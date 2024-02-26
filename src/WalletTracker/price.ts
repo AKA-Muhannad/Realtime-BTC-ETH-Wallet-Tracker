@@ -3,7 +3,6 @@ import { Kafka, logLevel } from 'kafkajs'
 import { KafkaTopics } from './events'
 import dotenv from 'dotenv';
 import * as path from 'path';
-import { json } from 'stream/consumers';
 
 dotenv.config({ path: path.resolve('../../.env') });
 

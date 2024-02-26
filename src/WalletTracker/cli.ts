@@ -5,15 +5,14 @@ import {
 } from './utils'
 import dotenv from 'dotenv';
 import * as path from 'path';
-import { json } from "stream/consumers";
 
 dotenv.config({ path: path.resolve('../../.env') });
 
 const WEB_SOCKET = process.env.WEB_SOCKET!
 const ws = new WebSocket(WEB_SOCKET)
-const address = process.argv[2]
+const address = process.argv[1]
+console.log(address)
 const currency = getCurrencyFromAddress(address)
-
 let balance: number | undefined
 let price: number | undefined
 
