@@ -9,6 +9,7 @@ import * as path from 'path';
 dotenv.config({ path: path.resolve('../../.env') });
 const KAFKA_BROKER_ADDRESS = process.env.KAFKA_BROKER!
 const PORT = Number(process.env.PORT!)
+const WS_PORT = Number(process.env.WS_PORT!)
 console.log(PORT)
 
 const kafka = new Kafka({ brokers: [KAFKA_BROKER_ADDRESS], logLevel: logLevel.ERROR })
@@ -20,7 +21,7 @@ const priceConsumer = kafka.consumer({ groupId: priceConsumerGroupId })
 const balanceConsumer = kafka.consumer({ groupId: balanceConsumerGroupId })
 
 // the serve communicates with the CLI through websocket
-const wss = new WebSocketServer({ port: PORT })
+const wss = new WebSocketServer({ port: WS_PORT })
 const clients = new Map<string, WebSocket>() // socketId -> WebSocket
 const clientWallets = new Map<string, { address: string, currency: string }>() // socketId -> Wallet
 const walletBalances = new Map<string, number>() // address -> balance

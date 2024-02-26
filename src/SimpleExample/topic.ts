@@ -20,13 +20,30 @@ async function runTopic() {
         console.log('Connected! ✅')
 
         // it's A-M , N-Z
+        // await admin.createTopics({
+        //     waitForLeaders: true,
+        //     topics: [{
+        //         topic: 'Users',
+        //         numPartitions: 2,
+        //     }]
+        // })
         await admin.createTopics({
             waitForLeaders: true,
+
             topics: [{
-                topic: 'Users',
+                topic: "currency_price",
+                numPartitions: 2,
+            },
+            {
+                topic: 'wallet_balance',
+                numPartitions: 2,
+            },
+            {
+                topic: 'task_to_read_balance',
                 numPartitions: 2,
             }]
         })
+        console.log('Topic has been created successflly 👍')
         console.log('Topic has been created successflly 👍')
         await admin.disconnect()
     } catch (error) {

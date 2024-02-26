@@ -23,6 +23,7 @@ const taskConsumer = kafka.consumer({ groupId, retry: { retries: 0 } })
 
 async function getWalletBalance(currency: string, address: string) {
     let url = `${BLOCKCYPHER_API_URL}/${currency}/main/addrs/${address}/balance`
+    // if the token was exist
     if (BLOCKCYPHER_TOKEN) url += `?token=${BLOCKCYPHER_TOKEN}`
 
     const { data } = await axios.get(url)
@@ -33,14 +34,27 @@ async function getWalletBalance(currency: string, address: string) {
 
 async function runBalance() {
     try {
+        const admin = kafka.admin()
+        console.log('Connecting... 🤌')
+        await admin.connect()
+        console.log('Connected! ✅')
+        console.log(KafkaTopics.CurrencyPrice)
+
+        const topics = [];
+        // Loop through enum values and create topics
+        for (const topic of Object.values(KafkaTopics)) {
+            topics.push({
+                topic,
+                numPartitions: 2, // Set the number of partitions as required
+            });
+        }
+        await admin.createTopics({
+            waitForLeaders: true,
+            topics: topics
+        })
+        console.log('Topic has been created successflly 👍')
         await producer.connect()
         await taskConsumer.connect()
-
-        await taskConsumer.subscribe({
-            topic: KafkaTopics.TaskToReadBalance,
-            fromBeginning: false
-        })
-
         //when we recevied each task we will load the balance
         await taskConsumer.run({
             eachMessage: async ({ message }) => {
